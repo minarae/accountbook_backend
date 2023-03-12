@@ -1,0 +1,9 @@
+{
+    "DB": {
+        "user": "minarae",
+        "password": "paradox8373",
+        "host": "localhost",
+        "port": "3306",
+        "database": "account_book"
+    }
+}
