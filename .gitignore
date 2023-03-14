@@ -6,4 +6,4 @@ __pycache__/
 # C extensions
 *.so
 
-secrect.json
+serects.json
