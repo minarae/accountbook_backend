@@ -12,7 +12,9 @@ DB = serects["DB"]
 DB_URL = f"mysql+pymysql://{DB['user']}:{DB['password']}@{DB['host']}/{DB['database']}?charset=utf8"
 
 engine = create_engine(
-    DB_URL, encoding = 'utf-8'
+    DB_URL, encoding = 'utf-8',
+    echo=True,
+    future=True,
 )
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
