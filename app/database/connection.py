@@ -5,7 +5,7 @@ import json
 import os
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-SERECT_FILE = os.path.join(BASE_DIR, 'serects.json')
+SERECT_FILE = os.path.join(BASE_DIR, 'secrets.json')
 serects = json.loads(open(SERECT_FILE).read())
 DB = serects["DB"]
 
