@@ -38,3 +38,7 @@ class LoginResponse(BaseModel):
 
 class Message(BaseModel):
     message: str
+
+# Refresh token을 위한 request 정의
+class Refresh(BaseModel):
+    refresh_token: str = Field(title="Refresh Token")

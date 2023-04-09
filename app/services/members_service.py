@@ -28,6 +28,7 @@ async def create_member(db: Session, member: schemas.MemberCreate):
 
     return db_member
 
+# login 처리
 async def login_proc(db: Session, member_id: str, member_pw: str):
     # 해당 아이디가 있는지 찾는다/
     stmt = select(models.Members).filter(models.Members.member_id == member_id, models.Members.is_deleted == 'F')
@@ -40,6 +41,29 @@ async def login_proc(db: Session, member_id: str, member_pw: str):
     if auth.verify_password(member_pw, db_member.Members.member_pw) == False:
         raise Exception("패스워드가 일치하지 않습니다.")
 
+    return make_login_response(db_member)
+
+
+# refresh token 처리
+async def member_refresh(db: Session, refresh_token: schemas.Refresh):
+    # refresh token 검사
+    try:
+        payload = auth.decode_refresh_token(refresh_token.refresh_token)
+    except Exception:
+        raise Exception
+
+    # 해당 회원이 있는지 검사
+    stmt = select(models.Members).filter(models.Members.member_no == payload['member_no'], models.Members.is_deleted == 'F')
+    result = db.execute(stmt)
+
+    db_member = result.fetchone()
+    if db_member is None:
+        raise Exception("해당하는 아이디를 찾을 수 없습니다")
+
+    return make_login_response(db_member)
+
+
+def make_login_response(db_member):
     data = {
         "member_no": db_member.Members.member_no,
         "member_id": db_member.Members.member_id,
@@ -53,6 +77,7 @@ async def login_proc(db: Session, member_id: str, member_pw: str):
     }, timedelta(hours=REFRESH_TOKEN_EXPIRE_HOURS))
 
     return data
+
 
 async def member_modify(db: Session, member: schemas.MemberModify, payload: schemas.JWTPayload):
     # 회원이 존재하는 아이디인지 확인
@@ -74,6 +99,7 @@ async def member_modify(db: Session, member: schemas.MemberModify, payload: sche
 
     db.commit()
     return db_member
+
 
 async def member_delete(db: Session, payload: schemas.JWTPayload):
     # 회원이 존재하는 아이디인지 확인

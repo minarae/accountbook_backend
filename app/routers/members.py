@@ -88,6 +88,24 @@ async def modify(
         return JSONResponse(content={"detail": e.args[0]}, status_code=HTTP_400_BAD_REQUEST)
 
 
+#refresh token을 이용한 access token 재발급
+@router.post("/refresh", description="token 갱신", response_model=schemas.LoginResponse, responses={
+    HTTP_400_BAD_REQUEST: {
+        "model": schemas.Message
+    }
+})
+async def refresh(
+    refresh_token: schemas.Refresh,
+    db: Session = Depends(get_db)
+):
+    try:
+        result = await members_service.member_refresh(db, refresh_token)
+
+        return result
+    except Exception as e:
+        return JSONResponse(content={"detail": e.args[0]}, status_code=HTTP_400_BAD_REQUEST)
+
+
 # 회원탈퇴
 @router.post("/unsubscribing", description="회원탈퇴", response_class=Response, responses={
     HTTP_400_BAD_REQUEST: {
@@ -98,6 +116,7 @@ async def unsubscribing(
     payload: schemas.JWTPayload = Depends(auth.decode_access_token),
     db: Session = Depends(get_db)
 ):
+    print(payload)
     try:
         result = await members_service.member_delete(db, payload)
 
