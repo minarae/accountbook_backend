@@ -15,7 +15,6 @@ from sqlalchemy.dialects.mysql import (
 )
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.sql import func
-from .connection import engine
 
 Base = declarative_base()
 class Members(Base):
@@ -132,5 +131,5 @@ class LogDefault(Base):
         }
     )
 
-with engine.connect() as conn:
-    Base.metadata.create_all(conn)
+#with engine.connect() as conn:
+#    Base.metadata.create_all(conn)

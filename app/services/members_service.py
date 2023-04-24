@@ -1,5 +1,5 @@
 from sqlalchemy import select
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql import func
 from datetime import timedelta
 from ..database import models, schemas
@@ -8,10 +8,10 @@ from ..libraries import auth
 ACCESS_TOKEN_EXPIRE_MINUTES = 60
 REFRESH_TOKEN_EXPIRE_HOURS = 24
 
-async def create_member(db: Session, member: schemas.MemberCreate):
+async def create_member(db: AsyncSession, member: schemas.MemberCreate):
     # 아이디가 중복되는 계정이 있는지 확인
     stmt = select(models.Members.member_id).filter(models.Members.member_id == member.member_id)
-    result = db.execute(stmt)
+    result = await db.execute(stmt)
 
     list = result.fetchall()
     if len(list) > 0:
@@ -23,16 +23,16 @@ async def create_member(db: Session, member: schemas.MemberCreate):
     # DB 저장
     db_member = models.Members(**member.dict(exclude={"member_pw"}), member_pw=password_hash)
     db.add(db_member)
-    db.commit()
-    db.refresh(db_member)
+    await db.commit()
+    await db.refresh(db_member)
 
     return db_member
 
 # login 처리
-async def login_proc(db: Session, member_id: str, member_pw: str):
+async def login_proc(db: AsyncSession, member_id: str, member_pw: str):
     # 해당 아이디가 있는지 찾는다/
     stmt = select(models.Members).filter(models.Members.member_id == member_id, models.Members.is_deleted == 'F')
-    result = db.execute(stmt)
+    result = await db.execute(stmt)
 
     db_member = result.fetchone()
     if db_member is None:
@@ -45,7 +45,7 @@ async def login_proc(db: Session, member_id: str, member_pw: str):
 
 
 # refresh token 처리
-async def member_refresh(db: Session, refresh_token: schemas.Refresh):
+async def member_refresh(db: AsyncSession, refresh_token: schemas.Refresh):
     # refresh token 검사
     try:
         payload = auth.decode_refresh_token(refresh_token.refresh_token)
@@ -54,7 +54,7 @@ async def member_refresh(db: Session, refresh_token: schemas.Refresh):
 
     # 해당 회원이 있는지 검사
     stmt = select(models.Members).filter(models.Members.member_no == payload['member_no'], models.Members.is_deleted == 'F')
-    result = db.execute(stmt)
+    result = await db.execute(stmt)
 
     db_member = result.fetchone()
     if db_member is None:
@@ -79,9 +79,10 @@ def make_login_response(db_member):
     return data
 
 
-async def member_modify(db: Session, member: schemas.MemberModify, payload: schemas.JWTPayload):
+async def member_modify(db: AsyncSession, member: schemas.MemberModify, payload: schemas.JWTPayload):
     # 회원이 존재하는 아이디인지 확인
-    db_member = db.query(models.Members).filter_by(member_no = payload['member_no'], is_deleted = 'F').first()
+    result = await db.execute(select(models.Members).filter_by(member_no = payload['member_no'], is_deleted = 'F'))
+    db_member = result.scalars().first()
 
     if db_member is None:
         raise Exception("해당하는 회원 정보를 찾을 수 없습니다.")
@@ -97,13 +98,13 @@ async def member_modify(db: Session, member: schemas.MemberModify, payload: sche
         else:
             setattr(db_member, key, value)
 
-    db.commit()
+    await db.commit()
     return db_member
 
 
-async def member_delete(db: Session, payload: schemas.JWTPayload):
+async def member_delete(db: AsyncSession, payload: schemas.JWTPayload):
     # 회원이 존재하는 아이디인지 확인
-    db_member = db.query(models.Members).filter_by(member_no = payload['member_no'], is_deleted = 'F').first()
+    db_member = await db.query(models.Members).filter_by(member_no = payload['member_no'], is_deleted = 'F').first()
 
     if db_member is None:
         raise Exception("해당하는 회원 정보를 찾을 수 없습니다.")
@@ -111,5 +112,5 @@ async def member_delete(db: Session, payload: schemas.JWTPayload):
     setattr(db_member, 'is_deleted', 'T')
     setattr(db_member, 'del_dt', func.now())
 
-    db.commit()
+    await db.commit()
     return db_member
