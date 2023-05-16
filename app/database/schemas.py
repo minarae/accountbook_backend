@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import Optional
+from typing import Optional, Literal
 
 # 회원 가입에 대한 Request Schema
 class MemberCreate(BaseModel):
@@ -16,6 +16,20 @@ class MemberModify(BaseModel):
     member_pw: Optional[str] = Field(title="사용자 패스워드")
     member_name: Optional[str] = Field(title="사용자 이름", max_length=20)
     member_email: Optional[str] = Field(title="사용자 이메일", max_length=50)
+
+    class Config:
+        orm_mode = True
+
+class CategoryUpsert(BaseModel):
+    category_name: str = Field(title="카테고리 이름")
+    parent_no: Optional[int] = Field(title="부모 카테고리 번호", default=None)
+    class_name: Optional[str] = Field(title="아이콘 정보", default=None)
+    inout_type: Literal['I', 'O'] = Field(title="수입/지출구분")
+
+class CategoryInfo(CategoryUpsert):
+    category_no: int = Field(title="카테고리 번호")
+    member_no: Optional[int] = Field(title="소유자 회원 번호")
+    sort_order: int = Field(title="정렬순서")
 
     class Config:
         orm_mode = True

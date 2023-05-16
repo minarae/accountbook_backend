@@ -12,6 +12,8 @@ from sqlalchemy.dialects.mysql import (
     TINYINT,
     SMALLINT,
     INTEGER,
+    BIGINT,
+    TINYINT
 )
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.sql import func
@@ -41,13 +43,14 @@ class Members(Base):
 class Category(Base):
     __tablename__ = "tb_category"
 
-    category_no = Column(INTEGER(unsigned=True), nullable=False, autoincrement=True, comment="카테고리 번호")
+    category_no = Column(BIGINT(unsigned=True), nullable=False, autoincrement=True, comment="카테고리 번호")
     member_no = Column(SMALLINT(unsigned=True), nullable=True, comment="카테고리 생성자 번호(기본 카테고리일 경우 null)")
     category_name = Column(VARCHAR(length=50), nullable=False, comment="카테고리 이름")
     has_children = Column(CHAR(length=1), nullable=False, default="F", comment="자식을 가지고 있는지 여부(T|F)")
-    parent_no = Column(INTEGER(unsigned=True), nullable=True, comment="부모 카테고리 번호")
+    inout_type = Column(CHAR(length=1), nullable=False, default="O", comment="수입/지출 구분(I: incomes, O: outgoings)")
+    parent_no = Column(BIGINT(unsigned=True), nullable=True, comment="부모 카테고리 번호")
     class_name = Column(VARCHAR(length=30), nullable=True, comment="아이콘 클래스")
-    is_system = Column(CHAR(length=1), default="F", comment="시스템 기본 카테고리")
+    sort_order = Column(TINYINT(unsigned=True), default=1, comment="정렬순서")
     reg_dt = Column(DATETIME(timezone=False), nullable=False, server_default=func.now(), comment="생성일시")
     upd_dt = Column(DATETIME(timezone=False), nullable=False, server_default=func.now(), onupdate=func.now(), comment="수정일시")
     is_deleted = Column(CHAR(length=1), default="F", server_default="F", nullable=False, comment="삭제여부(T|F)")
@@ -102,7 +105,7 @@ class LogDefault(Base):
     detail_contents = Column(VARCHAR(length=300), nullable=False, comment="상세내역정보")
     amounts = Column(INTEGER(unsigned=True), nullable=False, comment="금액")
     io_type = Column(CHAR(length=1), nullable=False, comment="수입/지출 구분(I: 수입, O: 지출)")
-    category_no = Column(INTEGER(unsigned=True), nullable=True, comment="카테고리 번호")
+    category_no = Column(BIGINT(unsigned=True), nullable=True, comment="카테고리 번호")
     important = Column(TINYINT(unsigned=True), nullable=False, default=1, comment="중요도(지출일 경우만)")
     is_fixed_cost = Column(CHAR(length=1), nullable=False, default="F", comment="고정비여부(지출일 경우만, T|F)")
     reg_dt = Column(DATETIME(timezone=False), nullable=False, server_default=func.now(), comment="생성일시")

@@ -3,13 +3,12 @@ from sqlalchemy.orm import Session
 from .database.connection import get_db
 from .database import models
 from .database.connection import engine
-from .routers import members
-from contextlib import asynccontextmanager
-
+from .routers import members, category
 
 app = FastAPI(title="account-book-api")
 
 app.include_router(members.router)
+app.include_router(category.router)
 
 @app.on_event("startup")
 async def startup():

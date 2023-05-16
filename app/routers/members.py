@@ -3,9 +3,10 @@ from sqlalchemy.orm import Session
 from starlette.responses import Response, JSONResponse
 from starlette.status import HTTP_200_OK, HTTP_201_CREATED, HTTP_400_BAD_REQUEST
 from typing import Optional
+from sqlalchemy.ext.asyncio import AsyncSession
 from ..database.connection import get_db
 from ..database import schemas
-from ..services import members_service
+from ..services import members_service, category_service
 from ..libraries import auth
 
 router = APIRouter(
@@ -33,10 +34,11 @@ async def create(
             "member_email": "test@example.com",
         }
     ),
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
 ):
     try:
         result = await members_service.create_member(db, member)
+        await category_service.insert_default_categories(db, result.member_no)
 
         return Response(status_code=HTTP_201_CREATED)
     except Exception as e:
@@ -52,7 +54,7 @@ async def create(
 async def login(
     member_id: str = Body(title="사용자 아이디"),
     member_pw: str = Body(title="사용자 패스워드"),
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
 ):
     try:
         result = await members_service.login_proc(db, member_id, member_pw)
@@ -78,7 +80,7 @@ async def modify(
             "member_email": "test@example.com",
         }
     ),
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
 ):
     try:
         result = await members_service.member_modify(db, member, payload)
@@ -96,7 +98,7 @@ async def modify(
 })
 async def refresh(
     refresh_token: schemas.Refresh,
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
 ):
     try:
         result = await members_service.member_refresh(db, refresh_token)
@@ -114,7 +116,7 @@ async def refresh(
 })
 async def unsubscribing(
     payload: schemas.JWTPayload = Depends(auth.decode_access_token),
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
 ):
     print(payload)
     try:
