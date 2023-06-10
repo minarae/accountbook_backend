@@ -3,12 +3,13 @@ from sqlalchemy.orm import Session
 from .database.connection import get_db
 from .database import models
 from .database.connection import engine
-from .routers import members, category
+from .routers import members, category, account
 
 app = FastAPI(title="account-book-api")
 
 app.include_router(members.router)
 app.include_router(category.router)
+app.include_router(account.router)
 
 @app.on_event("startup")
 async def startup():

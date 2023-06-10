@@ -1,5 +1,6 @@
 from pydantic import BaseModel, Field
-from typing import Optional, Literal
+from typing import Optional, Literal, List
+from datetime import date
 
 # 회원 가입에 대한 Request Schema
 class MemberCreate(BaseModel):
@@ -30,6 +31,33 @@ class CategoryInfo(CategoryUpsert):
     category_no: int = Field(title="카테고리 번호")
     member_no: Optional[int] = Field(title="소유자 회원 번호")
     sort_order: int = Field(title="정렬순서")
+
+    class Config:
+        orm_mode = True
+
+class LogDetailUpsert(BaseModel):
+    log_detail_no: Optional[int] = Field(title="사용재역번호")
+    detail_contents: str = Field(title="상세내역정보")
+    amounts: int = Field(title="금액")
+    io_type: Literal["I", "O"] = Field(title="수입/지출 구분(I: 수입, O: 지출)")
+    category_no: Optional[int] = Field(title="카테고리 번호")
+    important: Optional[int] = Field(title="중요도")
+    is_fixed_cost: Literal["T", "F"] = Field(title="고정비여부(T|F)")
+
+class LogDetail(LogDetailUpsert):
+    account_log_no: int = Field(title="내역번호")
+
+    class Config:
+        orm_mode = True
+
+class AccountUpsert(BaseModel):
+    std_date: date = Field(title="날짜")
+    opponent_name: str = Field(title="메인거래처")
+    detail_list: List[LogDetailUpsert] = Field(title="세부내역")
+
+class AccountLog(AccountUpsert):
+    account_log_no: int = Field(title="내역번호")
+    member_no: int = Field(title="사용자번호")
 
     class Config:
         orm_mode = True

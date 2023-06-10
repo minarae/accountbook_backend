@@ -137,3 +137,19 @@ async def get_category_list(
 
     results = await db.execute(stmt)
     return results.scalars().all()
+
+async def get_all_category_nos_list(
+    db: AsyncSession,
+    member_no: int,
+):
+    # category를 검사하기 위해서 먼저 데이터를 가지고 있는다.
+    stmt = select(models.Category).filter(
+        models.Category.member_no == member_no,
+        models.Category.is_deleted == 'F'
+    )
+    results = await db.execute(stmt)
+    category_list = []
+    for item in results.scalars().all():
+        category_list.append(item.category_no)
+
+    return category_list
